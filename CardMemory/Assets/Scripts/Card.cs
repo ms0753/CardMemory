@@ -9,14 +9,14 @@ public class Card : MonoBehaviour
         transform.Find("front").gameObject.SetActive(true);
         transform.Find("back").gameObject.SetActive(false);
 
-        if (GameManager.gameManager.firstCard == null)
+        if (GameManager.instance.firstCard == null)
         {
-            GameManager.gameManager.firstCard = gameObject;
+            GameManager.instance.firstCard = gameObject;
         }
         else
         {
-            GameManager.gameManager.secondCard = gameObject;
-            GameManager.gameManager.isMatched();
+            GameManager.instance.secondCard = gameObject;
+            GameManager.instance.isMatched();
         }
     }
     public void destroyCard()

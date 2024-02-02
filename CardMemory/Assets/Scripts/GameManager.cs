@@ -3,80 +3,80 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
-    public static GameManager gameManager;
+    public static GameManager instance;
+
     public TMP_Text timeTxt;
     public GameObject card;
     public GameObject firstCard;
     public GameObject secondCard;
     public GameObject endPopup;
+    float time = 30.0f;
+    public List<Sprite> cardSprites; // 모든 카드 이미지를 담는 리스트
     public GameObject stage1;
     public GameObject stage2;
     public GameObject stage3;
-    float time = 30.0f;
+
 
     private void Awake()
     {
-        gameManager = this;
+        instance = this;
     }
 
     void Start()
     {
-        // 각 스테이지에 맞는 카드 배치를 수행합니다.
         if (stage1)
         {
-            Stage1Generate(2, 2);
+            CardGenerate(2, 2, 2);
+            stage2.SetActive(false);
+            stage3.SetActive(false);
         }
         else if (stage2)
         {
-            Stage2Generate(2, 4);
+            CardGenerate(2, 4, 4);
+            stage1.SetActive(false);
+            stage3.SetActive(false);
         }
         else if (stage3)
         {
-            Stage3Generate(3, 6);
+            CardGenerate(3, 6, 9);
+            stage1.SetActive(false);
+            stage2.SetActive(false);
         }
-        
-        /*
-        int[] trumps = { 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12 };
-        trumps = trumps.OrderBy(item => UnityEngine.Random.Range(-1.0f, 1.0f)).ToArray();
-        
-
-        for (int i = 0; i < 4; i++)
-        {
-            string trumpName = "clubs" + trumps[i].ToString();
-            Image cardImage = newCard.transform.Find("front").GetComponent<Image>();
-            Sprite sprite = Resources.Load<Sprite>(trumpName);
-            
-            if (sprite != null) // 해당 이미지가 올바로 로드되었는지 확인
-            {
-                cardImage.sprite = sprite;
-            }
-            else
-            {
-                Debug.LogError("Failed to load sprite: " + trumpName);
-            }
-            
-        }
-        */
     }
 
-    void Stage1Generate(int rows, int columns)
+    void CardGenerate(int rows, int columns, int numberOfCards)
     {
         RectTransform cardRectTransform = card.GetComponent<RectTransform>();
         float cardWidth = cardRectTransform.rect.width;
         float cardHeight = cardRectTransform.rect.height;
 
-        int[] trumps = { 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12 };
+        List<Sprite> pickedCards = new List<Sprite>(); // 뽑힌 카드를 담을 리스트
 
+        for (int i = 0; i < numberOfCards; i++)
+        {
+            int randomIndex = UnityEngine.Random.Range(0, cardSprites.Count); // 랜덤으로 인덱스를 선택합니다.
+            Sprite pickedCard = cardSprites[randomIndex]; // 선택된 인덱스의 카드를 가져옵니다.
+            pickedCards.Add(pickedCard); // 뽑힌 카드 리스트에 추가합니다.
+            pickedCards.Add(pickedCard);
+
+            // 뽑힌 카드를 리스트에서 제거하여 중복 선택을 방지합니다.
+            cardSprites.RemoveAt(randomIndex);
+        }
+
+        // 뽑힌 카드를 섞습니다.
+        pickedCards = pickedCards.OrderBy(x => UnityEngine.Random.value).ToList();
 
         // 생성할 위치 계산
-        Vector3 spawnPosition = new Vector3(-100, 50, 0); // 중앙 위치
+        Vector3 spawnPosition = new Vector3(-200, 50, 0); // 중앙 위치
         Vector3 offset = new Vector3(cardWidth * 2.0f, -cardHeight * 2.0f, 0); // 카드 간격
 
+        // 카드를 생성하고 배치합니다.
         for (int i = 0; i < rows; i++)
         {
             for (int j = 0; j < columns; j++)
@@ -86,62 +86,14 @@ public class GameManager : MonoBehaviour
                 newCardRectTransform.SetParent(GameObject.Find("cards").transform, false);
                 newCardRectTransform.localPosition = spawnPosition + new Vector3(offset.x * j, offset.y * i, 0);
 
-                string cardName = "cards" + trumps[i].ToString();
-                newCard.transform.Find("front").GetComponent<Image>().sprite = Resources.Load<Sprite>(cardName);
+                // 뽑힌 카드를 리스트에서 가져와서 이미지를 설정합니다.
+                Sprite cardSprite = pickedCards[i * columns + j];
+                newCard.transform.Find("front").GetComponent<Image>().sprite = cardSprite;
             }
         }
-    }
-
-    void Stage2Generate(int rows, int columns)
-    {
-        RectTransform cardRectTransform = card.GetComponent<RectTransform>();
-        float cardWidth = cardRectTransform.rect.width;
-        float cardHeight = cardRectTransform.rect.height;
-
-        Vector3 spawnPosition = new Vector3(-300, 50, 0);
-        Vector3 offset = new Vector3(cardWidth * 2.0f, -cardHeight * 2.0f, 0);
-
-        for (int i = 0; i < rows; i++)
+        foreach (Sprite card in pickedCards)
         {
-            for (int j = 0; j < columns; j++)
-            {
-                GameObject newCard = Instantiate(card);
-                RectTransform newCardRectTransform = newCard.GetComponent<RectTransform>();
-                newCardRectTransform.SetParent(GameObject.Find("cards").transform, false);
-                newCardRectTransform.localPosition = spawnPosition + new Vector3(offset.x * j, offset.y * i, 0);
-            }
-        }
-    }
-
-    void Stage3Generate(int rows, int columns)
-    {
-        RectTransform cardRectTransform = card.GetComponent<RectTransform>();
-        float cardWidth = cardRectTransform.rect.width;
-        float cardHeight = cardRectTransform.rect.height;
-
-        int[] trumps = { 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12 };
-        for (int i = 0; i < trumps.Length; i++)
-        {
-            int randomIndex = UnityEngine.Random.Range(i, trumps.Length);
-            int temp = trumps[randomIndex];
-            trumps[randomIndex] = trumps[i];
-            trumps[i] = temp;
-        }
-
-        Vector3 spawnPosition = new Vector3(-400, 100, 0);
-        Vector3 offset = new Vector3(cardWidth * 2.0f, -cardHeight * 2.0f, 0);
-
-        for (int i = 0; i < rows; i++)
-        {
-            for (int j = 0; j < columns; j++)
-            {
-                GameObject newCard = Instantiate(card);
-                RectTransform newCardRectTransform = newCard.GetComponent<RectTransform>();
-                newCardRectTransform.SetParent(GameObject.Find("cards").transform, false);
-                newCardRectTransform.localPosition = spawnPosition + new Vector3(offset.x * j, offset.y * i, 0);
-                string cardName = "cards" + trumps[i].ToString();
-                newCard.transform.Find("front").GetComponent<Image>().sprite = Resources.Load<Sprite>(cardName);
-            }
+            Debug.Log("Picked Card: " + card.name);
         }
     }
 
