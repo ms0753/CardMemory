@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -16,12 +15,12 @@ public class GameManager : MonoBehaviour
     public GameObject firstCard;
     public GameObject secondCard;
     public GameObject endPopup;
-    float time = 30.0f;
+    public GameObject nextPopup;
     public List<Sprite> cardSprites; // 모든 카드 이미지를 담는 리스트
     public GameObject stage1;
     public GameObject stage2;
     public GameObject stage3;
-
+    float time = 30.0f;
 
     private void Awake()
     {
@@ -33,20 +32,14 @@ public class GameManager : MonoBehaviour
         if (stage1)
         {
             CardGenerate(2, 2, 2);
-            stage2.SetActive(false);
-            stage3.SetActive(false);
         }
         else if (stage2)
         {
             CardGenerate(2, 4, 4);
-            stage1.SetActive(false);
-            stage3.SetActive(false);
         }
         else if (stage3)
         {
             CardGenerate(3, 6, 9);
-            stage1.SetActive(false);
-            stage2.SetActive(false);
         }
     }
 
@@ -73,7 +66,7 @@ public class GameManager : MonoBehaviour
         pickedCards = pickedCards.OrderBy(x => UnityEngine.Random.value).ToList();
 
         // 생성할 위치 계산
-        Vector3 spawnPosition = new Vector3(-200, 50, 0); // 중앙 위치
+        Vector3 spawnPosition = new Vector3(-400, 50, 0); // 중앙 위치
         Vector3 offset = new Vector3(cardWidth * 2.0f, -cardHeight * 2.0f, 0); // 카드 간격
 
         // 카드를 생성하고 배치합니다.
@@ -120,9 +113,9 @@ public class GameManager : MonoBehaviour
             secondCard.GetComponent<Card>().destroyCard();
 
             int cardsLeft = GameObject.Find("cards").transform.childCount;
-            if (cardsLeft == 2)
+            if (cardsLeft == 0)
             {
-                endPopup.SetActive(true);
+                nextPopup.SetActive(true);
                 Time.timeScale = 0.0f;
             }
         }
@@ -136,26 +129,4 @@ public class GameManager : MonoBehaviour
         secondCard = null;
     }
 
-    public void checkMatched()
-    {
-        string firstCardImage = firstCard.transform.Find("front").GetComponent<Image>().sprite.name;
-        string secondCardImage = secondCard.transform.Find("front").GetComponent<Image>().sprite.name;
-
-        if (firstCardImage == secondCardImage)
-        {
-            firstCard.GetComponent<Card>().destroyCard();
-            secondCard.GetComponent<Card>().destroyCard();
-
-            int cardsLeft = GameObject.Find("cards").transform.childCount;
-            Debug.Log(cardsLeft);
-        }
-        else
-        {
-            firstCard.GetComponent<Card>().closeCard();
-            secondCard.GetComponent<Card>().closeCard();
-        }
-
-        firstCard = null;
-        secondCard = null;
-    }
 }
